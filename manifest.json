@@ -2,7 +2,7 @@
     "version": "1",
     "information": {
         "name": "war-sms-plugin",
-        "displayName": "War SMS Plugin",
+        "displayName": "mySMS Plugin",
         "description": "just a test plugin",
         "url": "https://github.com/Ubiquiti-App/UCRM-plugins",
         "version": "1.0.0",
@@ -18,8 +18,7 @@
     },
     "menu": [
         {
-            "key": "Plugins",
-            "label": "My Jobs",
+            "label": "SMS Blaster",
             "type": "admin",
             "target": "iframe"
         }
