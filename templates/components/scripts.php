@@ -2,6 +2,10 @@
     let clientIds=new Array();
     let clients=new Array();
     let cbs=new Array();
+    const usetemplate=document.getElementById('usetemplate');
+    const message=document.getElementById('message');
+    const cost=document.getElementById('cost');
+    const select=document.getElementById('select');
     const body=document.getElementById('tbody');
     const cball=document.getElementById('selall');
     const rec=document.getElementById('recipients');
@@ -27,6 +31,17 @@
             })
         }
     }
+    function updateCost(){
+        let creditcost=0;
+        let count=message.value.length;
+        let credit=0;
+        if(count>0 && count<=160) credit=1;
+        else if(count>160 && count<=306) credit=2;
+        else if(count>306 && count<=459) credit=3;
+        else if(count>459 && count<=640) credit=4;
+        cost.innerHTML=credit!==0?credit+' credit/s':'out of range'
+    }
+
     function toggleall(e){
         clients=new Array();
         clientIds=new Array();
@@ -57,19 +72,32 @@
         window.location.href='public.php?page='+page;
     }
     function templated(){
-        let usetemplate=document.getElementById('usetemplate');
-        let message=document.getElementById('message');
-        let select=document.getElementById('select');
-        if(usetemplate.checked){}
-            message.innerHTML=select.value;
+        if(usetemplate.checked){
+            message.value=select.value;
+        }
         message.disabled=usetemplate.checked;
-        select.disabled=!(usetemplate);
+        select.disabled=!(usetemplate.checked);
+        updateCost();
     }
     function submit(event){
         event.preventDefault();
         document.getElementById('sendsms').submit();
         event.target.disabled=true;
     }
+    function fadeclose(node){
+        node.classList.remove('fadeIn');
+        node.classList.add('fadeOut');
+        setTimeout(() => {
+            node.style.display = 'none';
+        }, 500);
+    }
+    function fadeopen(node){
+        node.classList.remove('fadeOut');
+        node.classList.add('fadeIn');
+        node.style.display = 'flex';
+    }
+
+
 </script>
 <script>
 		const modal = document.querySelector('.main-modal');

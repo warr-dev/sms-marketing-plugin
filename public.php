@@ -21,6 +21,11 @@ $json_db = new JSONDB( __DIR__ ); // Or passing the directory of your json files
 
 // initiate httpclient for connecting to apis
 $client = HttpClient::create();
+// Render form.
+// $organizations = $api->get('organizations');
+
+$optionsManager = UcrmOptionsManager::create();
+
 
 
 // itextmo credrntials
@@ -40,6 +45,8 @@ $targets=[];// target clients to send filtered with contact or billing num selec
 
 $alerts=$_SESSION['alerts']??[];// store alerts
 
+// Retrieve renderer.
+$renderer = new TemplateRenderer();
 
 
 // Ensure that user is logged in and has permission to view invoices.
@@ -49,12 +56,142 @@ if (! $user || $user->isClient || ! $user->hasViewPermission(PermissionNames::BI
     \App\Http::forbidden();
 }
 
+function getMesVars($mes){
+    $pos=0;
+    $v=[];
+    while(strpos($mes,'{{',$pos)!==false){
+        $start=strpos($mes,'{{',$pos);
+        $end=strpos($mes,'}}',$pos)+2;
+        $var=substr($mes,$start,$end-$start);
+       $var=str_replace(array(" ", "{", "}"),'',$var);
+        $pos=$end+1;
+        array_push($v,$var);
+    }
+    return $v;
+}
+
+
+if(isset($_GET['json'])){
+    echo readfile('templates.json');
+}
 // Get the templates
 $templates = $json_db->select( '*' )
 	->from( 'templates.json' )
     ->get();
+$lastid=0;
 foreach($templates as $template){
+    $lastid=$template->id;
     $temp[$template->name]=$template->content;
+}
+if(isset($_GET['templating'])){
+    if(isset($_GET['deltemplate'])){
+        $id=$_GET['deltemplate'];
+        $json_db->delete()
+            ->from( 'templates.json' )
+            ->where( [ 'id' => $id ] )
+            ->trigger();
+        array_push($alerts,['type'=>'success','contents'=>['Template deleted successfully.']]);
+        $_SESSION['alerts']=$alerts;
+        header('location:'.$_SERVER['PHP_SELF'].'?templating');
+        return;
+    }
+    if(isset($_POST['addt'])){
+        $name=$_POST['tname'];
+        $mes=$_POST['message'];
+        $json_db->insert( 'templates.json', 
+            [ 
+                'id' => $lastid + 1, 
+                'name' => $name,
+                'category' => [],
+                'content' => $mes 
+            ]
+        );
+        array_push($alerts,['type'=>'success','contents'=>['Template added successfully.']]);
+        $_SESSION['alerts']=$alerts;
+        header('location:'.$_SERVER['PHP_SELF'].'?templating');
+        return;
+    }
+    else if(isset($_POST['upt'])){
+        $id=$_POST['upt'];
+        $name=$_POST['tname'];
+        $mes=$_POST['message'];
+        $json_db->update( [ 'name' => $name, 'content' => $mes ] )
+            ->from( 'templates.json' )
+            ->where( [ 'id' => $id ] )
+            ->trigger();
+        array_push($alerts,['type'=>'success','contents'=>['Template updated successfully.']]);
+        $_SESSION['alerts']=$alerts;
+        header('location:'.$_SERVER['PHP_SELF'].'?templating');
+        return;
+    }
+    session_destroy();
+
+    $renderer->render(
+        __DIR__ . '/templates/templating.php',
+        [
+            'alerts' => $alerts,
+            'pagename' => '- Templating',
+            'temps' => $templates
+        ]
+    );
+    return;
+}
+if(isset($_GET['upload'])){
+    $uploadDir = __DIR__; //path you wish to store you uploaded files
+    $uploadedFile = $uploadDir . '/templates.json';
+    $errors=[];
+    if (isset($_FILES['template'])) {
+        if($_FILES['template']['error'] > 0){
+            switch($_FILES['template']['error'])
+            {
+                case 1: array_push($errors,'File exceeded upload_max_filesize'); break;
+                case 2: array_push($errors,'File exceeded max_file_size'); break;
+                case 3: array_push($errors,'File only partially uploaded'); break;
+                case 4: array_push($errors,'No file uploaded'); break;
+            }
+            array_push($alerts,['type'=>'error','contents'=> $errors]);
+        }
+        else{
+            $filename = $_FILES['template']['name'];
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if($ext==='json'){
+                if(move_uploaded_file($_FILES['template']['tmp_name'], $uploadedFile)) {
+                    array_push($alerts,['type'=>'success','contents'=>['Restoration Successful']]);
+                } else {
+                    array_push($alerts,['type'=>'error','contents'=>['Restoration failed!']]);
+                }
+            }
+            else{
+                array_push($alerts,['type'=>'error','contents'=>['Only JSON file was allowed']]);
+            }
+        }
+        $_SESSION['alerts']=$alerts;
+        header('location:'.$_SERVER['PHP_SELF'].'?templating');
+        return;
+    }
+    array_push($alerts,['type'=>'error','contents'=>['No File was selected']]);
+    $_SESSION['alerts']=$alerts;
+    header('location:'.$_SERVER['PHP_SELF'].'?templating');
+    return;
+}
+if(isset($_GET["download"])){
+        $filepath='templates.json';
+        // Process download
+        if(file_exists($filepath)) {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($filepath));
+            flush(); // Flush system output buffer
+            readfile($filepath);
+            die('downloaded');
+        } else {
+            http_response_code(404);
+	        die('failed');
+        }
 }
 
 // get current balance
@@ -82,6 +219,22 @@ $isContact=isset($_POST['type'])&&$_POST['type']==='isContact';
 $content=$_POST['message']??$_POST['template']??'no content';
 $content=$content===''?'no content':$content;
 
+
+$mesVars=getMesVars($content);
+
+$vars = $json_db->select( '*' )
+->from( 'variables.json' )
+->get();
+
+
+// Templating
+function templatize($str,$vals,$vars){
+    foreach($vars as $var){
+        $column=$var->varval;
+        $str=str_replace('{{ ' . $var->varname . ' }}', $vals[$column] ?? '' , $str);
+    }
+    return $str;
+}
 // if theres request for sending sms
 if(isset($_POST['submit'])){
     // get the target contact of clients store it in target
@@ -90,61 +243,85 @@ if(isset($_POST['submit'])){
             foreach($perclient['contacts'] as $nums){
                 if(($nums['isBilling']&&$isBilling)||($nums['isContact']&&$isContact)){
                     $data=[];
+                    $invoices=$api->get('invoices',['clientId'=>$perclient['id']]);
+                    $service=$api->get('clients/services',['clientId'=>$perclient['id']]);
+                    $data['serviceAccountNumber']='N/A';
+                    foreach($service[0]['attributes'] as $att){
+                        if( $att['key']==='serviceAccountNumber'){
+                            $data['serviceAccountNumber']=$att['value'];
+                        }
+                    }
                     $data['num']=$nums['phone'];
                     $data['name']=$perclient['clientType']==2?$perclient['companyName']:$perclient['firstName'].' '.$perclient['lastName'];
-                    array_push($targets,$data);
-                    // $response = $client->request('POST', 'https://www.itexmo.com/php_api/api.php',
-                    //         [
-                    //             'body' => [
-                    //                 '1' => $nums['phone'],
-                    //                 '2' => $content,
-                    //                 '3' => $apikey,
-                    //                 'passwd' => $apipass
-                    //             ]
-                    //         ]
-                    //     );
-                    //     echo $content = $response->getContent();
-                    //     echo 'sent to '.$nums['phone'].'<br>';
+                    if($invoices!==[]){
+                        foreach($invoices as $invoice){
+                            $data['total']=$invoice['total'];
+                            $data['duedate']=strtotime($invoice['dueDate']);
+                            $data['duedate']=date('F j, Y',$data['duedate']);
+                            array_push($targets,$data);
+                        }
+                    }
+                    else{
+                        array_push($targets,$data);
+                    }
                 }
             }
         }
     }
-    if($bal>=count($targets)){
-        $alertcontents=[];
-        foreach($targets as $target){
-            $response = $client->request('POST', 'https://www.itexmo.com/php_api/api.php',
-                            [
-                                'body' => [
-                                    '1' => $target['num'],
-                                    '2' => $content,
-                                    '3' => $apikey,
-                                    'passwd' => $apipass
+    $segments=strlen($content);
+    if($segments<640&&$segments>=460) $segments=4;
+    else if($segments<=459&&$segments>=307) $segments=3;
+    else if($segments<=306&&$segments>=161) $segments=2;
+    else if($segments<=160&&$segments>0) $segments=1;
+    else $segments=0;
+    if($segments!=0){
+        if($bal>=(count($targets)*$segments)){
+            $alertcontents=[];
+            foreach($targets as $target){
+                $message=templatize($content,$target,$vars);
+                $response = $client->request('POST', 'https://www.itexmo.com/php_api/api.php',
+                                [
+                                    'body' => [
+                                        '1' => $target['num'],
+                                        '2' => $message,
+                                        '3' => $apikey,
+                                        'passwd' => $apipass
+                                    ]
                                 ]
-                            ]
-                        );
-            $res=$response->getContent();
-            if($res>0){
-                $c='Message sending failed to '.$target['name'].'.';
-                switch($res){
-                    case 1:
-                        $c='Invalid number for '.$target['name'].'.';
-                        break;
+                            );
+                $res=$response->getContent();
+                if($res>0){
+                    $c='Message sending failed to '.$target['name'].'.';
+                    switch($res){
+                        case 1:
+                            $c='Invalid number for '.$target['name'].'.';
+                            break;
+                        case 4:
+                            $c='Message sending failed to '.$target['name'].'!<br> No credit left';
+                            break;
+                        case 5:
+                            $c='Message sending failed to '.$target['name'].'!<br> You have reached the maximum characters per SMS ';
+                            break;
+                    }
+                    array_push($alertcontents,$c);
                 }
-                array_push($alertcontents,$c);
             }
+            $type=count($alertcontents)>0?'error':'success';
+            $alertcontents=count($alertcontents)>0?$alertcontents:['Messages successfuly sent!'];
+            array_push($alerts,[
+                'type'=> $type,
+                'contents' => $alertcontents
+                ]);
         }
-        $type=count($alertcontents)>0?'error':'success';
-        $alertcontents=count($alertcontents)>0?$alertcontents:['Messages successfuly sent!'];
-        array_push($alerts,[
-            'type'=> $type,
-            'contents' => $alertcontents
-            ]);
-        $_SESSION['alerts']=$alerts;
+        else
+            array_push($alerts,['type' => 'error','contents' => ['Message sending failed!<br> Not enough credits']]);
     }
+    else
+        array_push($alerts,['type' => 'error','contents' => ['Message sending failed!<br> You have reached the maximum characters per SMS']]);
+    $_SESSION['alerts']=$alerts;
     header('location:'.$_SERVER['PHP_SELF']);
     return;
 }
-
 session_destroy();
 $pageinfo=[];
 $params=[];
@@ -166,31 +343,27 @@ $clients = $api->get('clients',$params);
 $services = $api->get('clients/services');
 $cls=[];
 foreach($clients as $client){
+    // $lead="";
     $data['Id'] = $client['id'];
     $data['Name'] = $client['clientType']==2?$client['companyName']:$client['firstName'].' '.$client['lastName'];
+    // $data['Name'] .= $client['isLead']?$lead:'';
     $data['Created'] = date("F j, Y, g:i a",strtotime($client['registrationDate']));
     $data['Qouted Services']=[];
-    foreach($services as $s)
-        if($s['clientId']===$client['id'])
-           $data['Qouted Services']=$s['name'];
+    foreach($services as $s){
+        if($s['clientId']===$client['id']){
+            array_push($data['Qouted Services'],$s['name']);
+        }
+    }
     $data['Note']='';
     array_push($cls,$data);
 }
-
 $cols=['Id','Name','Created','Qouted Services','Note'];
 $styles=[
     'Qouted Services'=>'status-yellow|tdcenter',
     'Created' => 'tdcenter',
 ];
 
-// Retrieve renderer.
-$renderer = new TemplateRenderer();
 
-
-// Render form.
-// $organizations = $api->get('organizations');
-
-$optionsManager = UcrmOptionsManager::create();
 
 $renderer->render(
     __DIR__ . '/templates/layout.php',
@@ -202,6 +375,7 @@ $renderer->render(
         'balance' => $bal,
         'templates' => $temp,
         'alerts' => $alerts,
+        'variables' => $vars,
         'ucrmPublicUrl' => $optionsManager->loadOptions()->ucrmPublicUrl,
         'result' => $result ?? [],
     ]

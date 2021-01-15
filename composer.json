@@ -13,7 +13,6 @@
         "php": ">=7.1",
         "ubnt/ucrm-plugin-sdk": "~0.4",
         "symfony/http-client": "^5.2",
-        "twilio/sdk": "^6.15",
         "jajo/jsondb": "^2.1"
     }
 }

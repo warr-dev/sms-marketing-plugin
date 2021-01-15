@@ -13,8 +13,8 @@
     },
     {
         "id": 3,
-        "name": "template 3",
-        "category": [],
-        "content": "sample content 3"
+        "name": "billing",
+        "category": ["service"],
+        "content": "Hi, {{ client_name }}! Just a friendly reminder, your bill for account # {{ service_account_number }} amounting to P{{ amount }} is due {{ date }}. Your billing statement has been sent to your billing/email address."
     }
 ]

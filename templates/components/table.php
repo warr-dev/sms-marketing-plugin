@@ -29,16 +29,6 @@ function table($headers,$datas=[],$class=[])
                         foreach($data as $d=>$val){//column
                             $className='px-6 py-4 whitespace-nowrap text';//default class\
                             $td='p-3';
-                            // if($class!==[]){
-                            //     $keys=array_keys($class);
-                            //     if($headers[$i]===$keys[$i]){
-                            //         switch($class[$keys[$i]]){
-                            //             case 'status-yellow':
-                            //                 $className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-yellow-800';
-                            //             break;
-                            //         }
-                            //     }
-                            // }
                             if(in_array($d,array_keys($class))){
                                 $className='';
                                 if(strpos($class[$d],'status')!==false){
@@ -48,17 +38,17 @@ function table($headers,$datas=[],$class=[])
                                     else
                                         $className.=' bg-gray-500 text-gray-800';
                                 }
-                                // if(strpos($class[$d],'txtcenter')!==false)
-                                //     $className.='text-center';
+                                
                                 if(strpos($class[$d],'td')!==false){
                                     if(strpos($class[$d],'center')!==false)
                                         $td.=' text-center';
                                 }
                             }
                             if(is_array($val)){
-                                
-                                // foreach($val as $k=>$v)
-                                //     echo "<span class='$className'>$v</span><b>dfsd</b>";
+                                echo "<td class='$td'>";
+                                foreach($val as $k=>$v)
+                                    echo "<span class='$className mx-2'>$v</span>";
+                                echo "</td>";
                             }
                             else{
                                 echo "<td class='$td'>";
@@ -70,11 +60,6 @@ function table($headers,$datas=[],$class=[])
                         echo '</tr>';
                     }
                     ?>
-                        <!-- <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Active
-                        </span> -->
-        
-                    <!-- More rows... -->
                     </tbody>
                 </table>
                 </div>

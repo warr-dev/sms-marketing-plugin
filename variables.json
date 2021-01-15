@@ -1,0 +1,18 @@
+[
+    {
+        "varname": "client_name",
+        "varval": "name"
+    },
+    {
+        "varname": "service_account_number",
+        "varval": "serviceAccountNumber"
+    },
+    {
+        "varname": "amount",
+        "varval": "total"
+    },
+    {
+        "varname": "date",
+        "varval": "duedate"
+    }
+]

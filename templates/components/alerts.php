@@ -24,7 +24,7 @@
                     break;
             }
         ?>
-        <div class="flex bg-<?php echo $color; ?>-300 max-w-sm mb-4" onclick="console.log(this.style.display='none');">
+        <div class="flex bg-<?php echo $color; ?>-300 max-w-sm mb-4" onclick="fadeclose(this)">
             <div class="w-16 bg-<?php echo $color; ?>-600">
                 <div class="p-4">
                     <?php echo $svg;?>

@@ -25,17 +25,46 @@
                     <!-- Message field -->
                     <div class="flex flex-wrap my-6">
                         <div class="relative w-full appearance-none label-floating">
-                            <textarea rows="4" id="message" class="autoexpand tracking-wide py-2 px-4 mb-3 leading-relaxed appearance-none block w-full bg-gray-200 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
-                                id="message" type="text" name="message" placeholder="Message..."></textarea>
+                            <textarea oninput="updateCost()" maxlength="640" rows="4" id="message" class="autoexpand tracking-wide py-2 px-4 mb-3 leading-relaxed appearance-none block w-full bg-gray-200 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
+								id="message" type="text" name="message" placeholder="Message..."></textarea>
+								<p>
+									<div class="flex justify-between items-baseline p-3">
+										<div>Credit cost per sms: <span id="cost" class="text-teal-700"></span></div>
+										<span class="text-teal-500" onclick="this.parentNode.nextElementSibling.classList.remove('hidden')" >Insert Variable</span>
+									</div>
+									<div class="relative hidden">
+										<div class="absolute p-3" style="right:1rem;z-index:9999">
+											<div class="flex justify-center overflow-auto bg-gray-300 shadow-xl rounded-lg" style="max-height:12rem;width:20vw">
+												<div class="">
+													<ul class="divide-y divide-gray-300 text-sm">
+														<?php 
+															foreach($variables as $var){
+															?>
+																<li class="p-2 hover:bg-gray-50 cursor-pointer">
+																	<div class="flex justify-between">
+																		<span><?php echo $var->varname; ?></span>
+																		<i class="fa fa-plus" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('hidden')"></i>
+																	</div>
+																</li>
+															<?php
+															}
+														?>
+													</ul>
+												</div>
+											</div>
+										</div>
+									</div>
+								</p>
                                 <label for="message" class="absolute tracking-wide py-2 px-4 mb-4 opacity-0 leading-tight block top-0 left-0 cursor-text">Message...
                             </label>
                         </div>
 					</div>
-					<p>
+					<p><div class="flex justify-between	items-baseline p-3">
 						<label class="inline-flex items-center mt-3">
-							<input type="checkbox" class="form-checkbox h-5 w-5 text-purple-600" id="usetemplate" onchange="templated()"><span class="ml-2 text-gray-700">Use Template?</span>
+							<input type="checkbox" class="form-checkbox h-5 w-5 text-purple-600" id="usetemplate" onchange="templated();"><span class="ml-2 text-gray-700">Use Template?</span>
 						</label>
-					</p>
+						<a class="text-blue-500" href='public.php?templating'>Manage SMS Templates</a>
+					</div></p>
 					<!-- basic select -->
 					<?php
 						include_once 'select.php';

@@ -4,8 +4,8 @@
         
         $pages=$pageinfo['pages'];
         $page=$pageinfo['page'];
+        if($pages>1){
     ?>
-
         <div class="flex flex-col items-center my-12">
             <div class="flex text-gray-700">
                 <div class="h-12 w-12 mr-1 flex justify-center items-center rounded-full bg-gray-200 cursor-pointer <?php echo $page<=1?' text-gray-300':''; ?>" 
@@ -61,13 +61,12 @@
 
                             }
                         }
-                        else
+                        else if($pages==2)
                             for($i=1;$i<=2;$i++){
                                 $class="w-12 md:flex justify-center items-center hidden  cursor-pointer leading-5 transition duration-150 ease-in  rounded-full  ";
                                 $class= $page==$i?$class.' bg-teal-600 text-white':$class;
                                 echo '<div class="'.$class.'" onclick="pager('.$i.')">'.$i.'</div>';
                             }
-                        
                     ?>
                 </div>
                 <div class="h-12 w-12 ml-1 flex justify-center items-center rounded-full bg-gray-200 cursor-pointer  <?php echo $page>=$pages?' text-gray-300':''; ?>"
@@ -81,5 +80,6 @@
             </div>
 
     <?php
+        }
     }
 ?>
