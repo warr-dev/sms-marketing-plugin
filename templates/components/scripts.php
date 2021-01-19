@@ -79,6 +79,10 @@
         select.disabled=!(usetemplate.checked);
         updateCost();
     }
+    function insertvar(node,varname){
+        message.value+="{{ "+varname+" }}";
+        node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('hidden')
+    }
     function submit(event){
         event.preventDefault();
         document.getElementById('sendsms').submit();

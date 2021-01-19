@@ -27,6 +27,9 @@ $client = HttpClient::create();
 $optionsManager = UcrmOptionsManager::create();
 
 
+$vars = $json_db->select( '*' )
+->from( 'variables.json' )
+->get();
 
 // itextmo credrntials
 $apikey='TR-WARRE804776_PPHZF';
@@ -56,19 +59,19 @@ if (! $user || $user->isClient || ! $user->hasViewPermission(PermissionNames::BI
     \App\Http::forbidden();
 }
 
-function getMesVars($mes){
-    $pos=0;
-    $v=[];
-    while(strpos($mes,'{{',$pos)!==false){
-        $start=strpos($mes,'{{',$pos);
-        $end=strpos($mes,'}}',$pos)+2;
-        $var=substr($mes,$start,$end-$start);
-       $var=str_replace(array(" ", "{", "}"),'',$var);
-        $pos=$end+1;
-        array_push($v,$var);
-    }
-    return $v;
-}
+// function getMesVars($mes){
+//     $pos=0;
+//     $v=[];
+//     while(strpos($mes,'{{',$pos)!==false){
+//         $start=strpos($mes,'{{',$pos);
+//         $end=strpos($mes,'}}',$pos)+2;
+//         $var=substr($mes,$start,$end-$start);
+//        $var=str_replace(array(" ", "{", "}"),'',$var);
+//         $pos=$end+1;
+//         array_push($v,$var);
+//     }
+//     return $v;
+// }
 
 
 if(isset($_GET['json'])){
@@ -131,7 +134,8 @@ if(isset($_GET['templating'])){
         [
             'alerts' => $alerts,
             'pagename' => '- Templating',
-            'temps' => $templates
+            'temps' => $templates,
+            'variables' => $vars
         ]
     );
     return;
@@ -220,11 +224,8 @@ $content=$_POST['message']??$_POST['template']??'no content';
 $content=$content===''?'no content':$content;
 
 
-$mesVars=getMesVars($content);
+// $mesVars=getMesVars($content);
 
-$vars = $json_db->select( '*' )
-->from( 'variables.json' )
-->get();
 
 
 // Templating
@@ -246,6 +247,7 @@ if(isset($_POST['submit'])){
                     $invoices=$api->get('invoices',['clientId'=>$perclient['id']]);
                     $service=$api->get('clients/services',['clientId'=>$perclient['id']]);
                     $data['serviceAccountNumber']='N/A';
+                    if(count($service)>0)
                     foreach($service[0]['attributes'] as $att){
                         if( $att['key']==='serviceAccountNumber'){
                             $data['serviceAccountNumber']=$att['value'];
@@ -253,7 +255,7 @@ if(isset($_POST['submit'])){
                     }
                     $data['num']=$nums['phone'];
                     $data['name']=$perclient['clientType']==2?$perclient['companyName']:$perclient['firstName'].' '.$perclient['lastName'];
-                    if($invoices!==[]){
+                    if(count($invoices)>0){
                         foreach($invoices as $invoice){
                             $data['total']=$invoice['total'];
                             $data['duedate']=strtotime($invoice['dueDate']);

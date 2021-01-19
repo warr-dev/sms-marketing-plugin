@@ -61,6 +61,10 @@
             window.location.href='public.php?templating&deltemplate='+id;
         }
     }
+    function insertvar(node,varname){
+        message.value+="{{ "+varname+" }}";
+        node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('hidden')
+    }
     let title=document.getElementById('modalTitle');
     let button=document.getElementById('but');
     function addtemp(){

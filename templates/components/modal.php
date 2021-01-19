@@ -34,7 +34,7 @@
 									</div>
 									<div class="relative hidden">
 										<div class="absolute p-3" style="right:1rem;z-index:9999">
-											<div class="flex justify-center overflow-auto bg-gray-300 shadow-xl rounded-lg" style="max-height:12rem;width:20vw">
+											<div class="overflow-auto bg-gray-300 shadow-xl rounded-lg" style="max-height:12rem;width:20vw">
 												<div class="">
 													<ul class="divide-y divide-gray-300 text-sm">
 														<?php 
@@ -43,7 +43,7 @@
 																<li class="p-2 hover:bg-gray-50 cursor-pointer">
 																	<div class="flex justify-between">
 																		<span><?php echo $var->varname; ?></span>
-																		<i class="fa fa-plus" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('hidden')"></i>
+																		<i class="fa fa-plus text-teal-500" onclick="insertvar(this,'<?php echo $var->varname; ?>');"></i>
 																	</div>
 																</li>
 															<?php
