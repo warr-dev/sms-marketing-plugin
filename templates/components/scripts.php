@@ -11,6 +11,7 @@
     const rec=document.getElementById('recipients');
     const ids=document.getElementById('ids');
     const children=body.getElementsByTagName("*");
+    const sendbutton=document.getElementById('sendbutton');
     for(let i=0;i<children.length;i++){
         if(children[i].nodeName==='INPUT'){
             cbs.push(children[i]);
@@ -75,11 +76,17 @@
         if(usetemplate.checked){
             message.value=select.value;
         }
+        else{
+            message.value="";
+        }
         message.disabled=usetemplate.checked;
         select.disabled=!(usetemplate.checked);
         updateCost();
     }
     function insertvar(node,varname){
+        if(usetemplate.checked){
+            return alert("cant add on templated mode")
+        }
         message.value+="{{ "+varname+" }}";
         node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('hidden')
     }
@@ -99,6 +106,11 @@
         node.classList.remove('fadeOut');
         node.classList.add('fadeIn');
         node.style.display = 'flex';
+    }
+    function sendit(){
+        sendbutton.disabled=true;
+        sendbutton.style.cursor="wait";
+        return true;
     }
 
 
@@ -133,9 +145,6 @@
 
 			modal.style.display = 'none';
 
-			window.onclick = function (event) {
-				if (event.target == modal) modalClose();
-			}
 		}
     </script>
     

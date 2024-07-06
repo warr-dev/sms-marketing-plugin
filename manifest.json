@@ -22,5 +22,19 @@
             "type": "admin",
             "target": "iframe"
         }
+    ],
+    "configuration": [
+        {
+          "key": "APIKey",
+          "label": "itexMo API Key",
+          "description": "get from itexmo.com",
+          "required": 1
+        },
+        {
+          "key": "APIPass",
+          "label": "itexmo API Pass",
+          "description": "get from itexmo.com",
+          "required": 1
+        }
     ]
 }

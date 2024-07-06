@@ -3,7 +3,7 @@
         "id": 1,
         "name": "promotion",
         "category": [],
-        "content": "Get the first-ever shareable bundle promo from MyFi! Enjoy and share up to 10GB for surfing with your family and friends with the all-new myVoucher. Just access the Hotspot at your nearest store to avail. Visit https://www.myfi.com.ph for more info."
+        "content": "Hi, {{ client_name }}! account # {{ service_account_number }} amounting to P{{ inv_amount }} is due {{ inv_date }}."
     },
     {
         "id": 2,

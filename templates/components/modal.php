@@ -3,7 +3,7 @@
 		<div
 			class="border border-teal-500 shadow-lg modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
 			<div class="modal-content py-4 text-left px-6">
-                <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" >
+                <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" onsubmit="return sendit();" >
 				<!--Title-->
 				<div class="flex justify-between items-center pb-3">
 					<p class="text-2xl font-bold">SMS Blaster</p>
@@ -22,6 +22,7 @@
 					<p class="pt-5">Recipients:</p>
                     <p class="text-blue-500" id="recipients"></p>
                     <input type="hidden" id="ids" name="ids" />
+                    <input type="hidden" id="ids" name="submit" />
                     <!-- Message field -->
                     <div class="flex flex-wrap my-6">
                         <div class="relative w-full appearance-none label-floating">

@@ -1,18 +1,22 @@
 [
     {
         "varname": "client_name",
-        "varval": "name"
+        "varval": "name",
+        "category": []
     },
     {
         "varname": "service_account_number",
-        "varval": "serviceAccountNumber"
+        "varval": "serviceAccountNumber",
+        "category": ["service"]
     },
     {
-        "varname": "amount",
-        "varval": "total"
+        "varname": "inv_amount",
+        "varval": "total",
+        "category": ["invoice","service"]
     },
     {
-        "varname": "date",
-        "varval": "duedate"
+        "varname": "inv_date",
+        "varval": "duedate",
+        "category": ["invoice","service"]
     }
 ]

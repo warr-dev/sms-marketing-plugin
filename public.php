@@ -31,9 +31,11 @@ $vars = $json_db->select( '*' )
 ->from( 'variables.json' )
 ->get();
 
+$configManager = \Ubnt\UcrmPluginSdk\Service\PluginConfigManager::create();
+$config = $configManager->loadConfig();
 // itextmo credrntials
-$apikey='TR-WARRE804776_PPHZF';
-$apipass='#@{nwkw5{5';
+$apikey=$config['APIKey']??'TR-MVSOF645935_IVR5H';
+$apipass=$config['APIPass']??'{c7f8$z(1r';
 
 // twilio credentials
 // $client = new Twilio\Rest\Client($sid, $token);
@@ -72,7 +74,6 @@ if (! $user || $user->isClient || ! $user->hasViewPermission(PermissionNames::BI
 //     }
 //     return $v;
 // }
-
 
 if(isset($_GET['json'])){
     echo readfile('templates.json');
@@ -236,6 +237,31 @@ function templatize($str,$vals,$vars){
     }
     return $str;
 }
+
+function is($type,$mes,$vars){
+    $pos=0;
+    // $v=[];
+    $val=false;
+    while($pos<strlen($mes)){
+        $start=strpos($mes,'{{',$pos);
+        if($start===false) return $val;
+        $end=strpos($mes,'}}',$pos)+2;
+        $var=substr($mes,$start,$end-$start);
+        $var=str_replace(array(" ", "{", "}"),'',$var);
+        $pos=$end;
+        foreach($vars as $va){
+            if($va->varname==$var){
+                if(in_array($type,$va->category)){
+                    $val=true;
+                }
+            }
+        }
+        // array_push($v,$var);
+    }
+    // return $v;
+    return $val;
+}
+
 // if theres request for sending sms
 if(isset($_POST['submit'])){
     // get the target contact of clients store it in target
@@ -245,22 +271,55 @@ if(isset($_POST['submit'])){
                 if(($nums['isBilling']&&$isBilling)||($nums['isContact']&&$isContact)){
                     $data=[];
                     $invoices=$api->get('invoices',['clientId'=>$perclient['id']]);
-                    $service=$api->get('clients/services',['clientId'=>$perclient['id']]);
+                    $services=$api->get('clients/services',['clientId'=>$perclient['id']]);
                     $data['serviceAccountNumber']='N/A';
-                    if(count($service)>0)
-                    foreach($service[0]['attributes'] as $att){
-                        if( $att['key']==='serviceAccountNumber'){
-                            $data['serviceAccountNumber']=$att['value'];
-                        }
-                    }
                     $data['num']=$nums['phone'];
                     $data['name']=$perclient['clientType']==2?$perclient['companyName']:$perclient['firstName'].' '.$perclient['lastName'];
-                    if(count($invoices)>0){
-                        foreach($invoices as $invoice){
-                            $data['total']=$invoice['total'];
-                            $data['duedate']=strtotime($invoice['dueDate']);
-                            $data['duedate']=date('F j, Y',$data['duedate']);
-                            array_push($targets,$data);
+                    if(is("invoice",$content,$vars)){
+                        if(count($invoices)>0){
+                            foreach($invoices as $invoice){
+                                $data['total']=$invoice['total'];
+                                $data['serviceAccountNumber']='N/A';
+                                $data['duedate']=strtotime($invoice['dueDate']);
+                                $data['duedate']=date('F j, Y',$data['duedate']);
+                                if($invoice['status']==1||$invoice['status']==2){
+                                    $serviceid=false;
+                                    foreach($invoice['items'] as $item){
+                                        $serviceid=$item['serviceId']??false;
+                                    }
+                                    if($serviceid!==false){
+                                        foreach($services as $service){
+                                            if($service['id']==$serviceid){
+                                                $data['serviceAccountNumber']=$service['contractId'];
+                                            }
+                                        }
+                                    }
+                                    array_push($targets,$data);
+                                }
+                                else{
+                                    array_push($alerts,[
+                                        'type'=> 'error',
+                                        'contents' => ["Message not sent to ".$data['name'].". invoice # ".$invoice['number']." was fully paid or not for payment"]
+                                        ]);
+                                }
+                            }
+                        }
+                        else{
+                            //array_push($targets,$data);
+                            
+                            array_push($alerts,[
+                                'type'=> 'error',
+                                'contents' => ["Message not sent to ".$data['name'].". No invoice found"]
+                                ]);
+                        }
+                    }
+                    else if(is("service",$content,$vars)){
+                        if(count($services)>0){
+                            echo "ser";
+                            foreach($services as $service){
+                                $data['serviceAccountNumber']=$service['contractId'];
+                                array_push($targets,$data);
+                            }
                         }
                     }
                     else{
@@ -276,11 +335,13 @@ if(isset($_POST['submit'])){
     else if($segments<=306&&$segments>=161) $segments=2;
     else if($segments<=160&&$segments>0) $segments=1;
     else $segments=0;
+    
     if($segments!=0){
-        if($bal>=(count($targets)*$segments)){
+        // if($bal>=(count($targets)*$segments)){
             $alertcontents=[];
             foreach($targets as $target){
                 $message=templatize($content,$target,$vars);
+                // echo "target:"; print_r($target); echo "<br>";
                 $response = $client->request('POST', 'https://www.itexmo.com/php_api/api.php',
                                 [
                                     'body' => [
@@ -314,13 +375,16 @@ if(isset($_POST['submit'])){
                 'type'=> $type,
                 'contents' => $alertcontents
                 ]);
-        }
-        else
-            array_push($alerts,['type' => 'error','contents' => ['Message sending failed!<br> Not enough credits']]);
+        // }
+        // else
+        //     array_push($alerts,['type' => 'error','contents' => ['Message sending failed!<br> Not enough credits']]);
     }
     else
         array_push($alerts,['type' => 'error','contents' => ['Message sending failed!<br> You have reached the maximum characters per SMS']]);
     $_SESSION['alerts']=$alerts;
+    // print_r($_SESSION['alerts']);
+    // session_destroy();
+    // return;
     header('location:'.$_SERVER['PHP_SELF']);
     return;
 }
