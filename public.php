@@ -34,14 +34,8 @@ $vars = $json_db->select( '*' )
 $configManager = \Ubnt\UcrmPluginSdk\Service\PluginConfigManager::create();
 $config = $configManager->loadConfig();
 // itextmo credrntials
-$apikey=$config['APIKey']??'TR-MVSOF645935_IVR5H';
-$apipass=$config['APIPass']??'{c7f8$z(1r';
-
-// twilio credentials
-// $client = new Twilio\Rest\Client($sid, $token);
-// $sid = "AC30a0f2078a0db789f4fe0bd5a82ae0e1"; // Your Account SID from www.twilio.com/console
-// $token = "d457dd70ae0aae2900dc626d27bc1f66"; // Your Auth Token from www.twilio.com/console\
-// $mynum="+13158608965";
+$apikey=$config['APIKey']??'';
+$apipass=$config['APIPass']??'';
 
 
 $temp=[];// for templates
